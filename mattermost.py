@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 
 # Copyright (c) 2015 NDrive SA
 #
@@ -20,11 +20,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from __future__ import print_function
+
 import argparse
 import json
-import urllib2
+import sys
 
-VERSION = "0.2.0"
+IS_PY2 = sys.version_info[0] < 3
+
+if IS_PY2:
+    import urllib2
+else:
+    import urllib.request
+    import urllib.error
+    import urllib.parse
+
+
+VERSION = "0.3.0"
 
 TEMPLATE_HOST = "__{notificationtype}__ {hostalias} is {hoststate}\n{hostoutput}" # noqa
 TEMPLATE_SERVICE = "__{notificationtype}__ {hostalias}/{servicedesc} is {servicestate}\n{serviceoutput}" # noqa
@@ -88,13 +100,17 @@ def make_data(args):
 
 
 def request(url, data):
-    req = urllib2.Request(url, data)
-    response = urllib2.urlopen(req)
+    if IS_PY2:
+        req = urllib2.Request(url, data)
+        response = urllib2.urlopen(req)
+    else:
+        req = urllib.request.Request(url, data)
+        response = urllib.request.urlopen(req)
     return response.read()
 
 
 if __name__ == "__main__":
     args = parse()
-    data = make_data(args)
+    data = make_data(args).encode("utf-8")
     response = request(args.url, data)
-    print response
+    print(response.decode('utf-8'))
